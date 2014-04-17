@@ -1,0 +1,15 @@
+<project name="milkymapdb" default="dist">
+
+    <property file="../milkyway.properties"/>
+
+    <import file="../common.xml" as="m"/>
+    <property name="module.name" value="mapdb"/>
+
+    <path id="dependencies">
+        <fileset dir="../framework/dist/" includes="*.jar"/>
+        <fileset dir="../framework/lib/" includes="*.jar"/>
+    </path>
+
+    <target name="dist" depends="m.dist"/>
+
+</project>

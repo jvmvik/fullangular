@@ -1,0 +1,14 @@
+apply plugin: 'java'
+apply plugin: 'idea'
+
+sourceCompatibility = 1.8
+version = 1.0
+
+repositories {
+  mavenCentral()
+}
+
+dependencies{
+  // Add mapdb to compile
+  testCompile 'junit:junit:4.11'
+}
