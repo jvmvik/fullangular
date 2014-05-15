@@ -7,9 +7,6 @@ package io.milkyway.mapdb;
  */
 public class DSException extends Exception
 {
-  public DSException()
-  {
-  }
 
   public DSException(String message)
   {

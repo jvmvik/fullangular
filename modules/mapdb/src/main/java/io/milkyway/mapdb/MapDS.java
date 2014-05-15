@@ -101,8 +101,7 @@ public class MapDS
   }
 
   /**
-   * Retrieve or create a collection
-   * <p/>
+   * Retrieve or create a collection<p/>
    * This operation is automatically applied to the datastore.
    *
    * @param collectionName name of the collection
@@ -346,7 +345,7 @@ public class MapDS
    * @param criteria       search criteria
    * @return first element matching the criteria, or null if no match found
    */
-  public Object findOne(String collectionName, Criteria<?> criteria)
+  protected Object findOne(String collectionName, Criteria<?> criteria)
       throws DSException
   {
     Map<Long, Object> r = findAllBy(collectionName, criteria);
@@ -525,16 +524,29 @@ public class MapDS
    * Find a key for associated to an element in the collection.
    *
    * @param collectionName
-   * @param earth
+   * @param criteria
    * @return -1L if not found
    */
-  public Long findKey(String collectionName, Criteria<?> earth) throws DSException
+  public Long findKey(String collectionName, Criteria<?> criteria) throws DSException
   {
-    Map<Long, Object> col = findAllBy(collectionName, earth, -1, Integer.MAX_VALUE);
+    Map<Long, Object> col = findAllBy(collectionName, criteria, -1, Integer.MAX_VALUE);
     Iterator<Long> it = col.keySet().iterator();
     if(it.hasNext())
       return it.next();
     return -1L;
+  }
+
+  /***
+   * Get an element from a collection
+   *
+   * @param collectionName name of the collection
+   * @param key unique id for the element
+   * @return element requested
+   * @throws DSException
+   */
+  public Object get(String collectionName, Long key) throws DSException
+  {
+    return getCollection(collectionName).get(key);
   }
 
   public boolean isRunning()

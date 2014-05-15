@@ -11,7 +11,7 @@ public interface Sort<K, T>
   /**
    * Select sorting parameters
    *
-   * @param item element to sort
+   * @param item to sort
    * @return key used for sorting
    */
   public T key(K item);
