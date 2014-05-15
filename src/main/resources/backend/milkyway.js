@@ -9,15 +9,45 @@
 var Server = Java.type("io.milkyway.Server");
 var server = new Server();
 
-// Milkyway class equivalent to angularjs for the front end
+// Module
+var Module = {
+
+    /*
+     * Controller
+     *
+     * app.controller('MyController', ['$service', '$handler', 'ctx', function($service, $handler, ctx){}])
+     */
+    controller: function(name, args)
+    {
+
+    },
+
+    /*
+     * Service
+     *
+     * app.service('MyService', ['$service', '$handler', 'ctx', function($service, $handler, ctx){}])
+     */
+     service: function(name, args)
+     {
+
+     }
+}
+
+
+/*
+// Milkyway class equivalent to angularJS for the front end
 var milkyway = {
     start: function(port)
     {
        server.start(port);
     },
-    handler: function(url, callback)
+    get: function(url, callback)
     {
-       server.rest(url, callback);
+       server.handler(url, callback);
+    },
+    port: function(port)
+    {
+        server.port(port);
     },
     resource: function(path)
     {
@@ -26,5 +56,18 @@ var milkyway = {
     wire: function(socket, callback)
     {
         server.wire(socket, callback);
+    },
+    module: function(name, args)
+    {
+        //TODO Add name
+
+        return
+    }
+}*/
+
+var $handler = {
+    set: function(url, callback)
+    {
+        server.handler(url, callback);
     }
 }

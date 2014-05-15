@@ -20,11 +20,7 @@ public class RouterParserTest
     parser = new RouterParser();
   }
 
-  @Test
-  public void match() throws Exception
-  {
-
-  }
+  //TODO WRite a lot more test, break down in unit test and integration tests
 
   @Test
   public void testMatch() throws Exception

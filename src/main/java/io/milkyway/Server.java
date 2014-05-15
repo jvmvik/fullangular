@@ -2,14 +2,12 @@ package io.milkyway;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import jdk.nashorn.api.scripting.JSObject;
-import jdk.nashorn.internal.objects.NativeArray;
+import io.netty.handler.codec.http.HttpMethod;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -18,32 +16,65 @@ import java.util.function.Function;
 public class Server
 {
   private final ServerInitializer initializer;
+  private NioEventLoopGroup bossGroup;
+  private NioEventLoopGroup workerGroup;
+  private Channel ch;
+  private int port;
+  private ChannelFuture channelFuture;
+  private ServerBootstrap b;
+  private ChannelFuture serverBind;
 
   public Server()
   {
     initializer = new ServerInitializer();
+    port = 8080;
   }
 
   /***
-   * Rest http handler
-   *
-   * @param url url intercepted by the URL
-   * @param function that must executed
-   */
-  public void rest(String url, Function function) throws RouterException
-  {
-    initializer.serverHandler.router.add(url, function);
-  }
-
-  /***
-   * Get http handler
+   * Register handler for get
    *
    * @param url url intercepted by the URL
    * @param function that must executed
    */
   public void get(String url, Function function) throws RouterException
   {
-    initializer.serverHandler.router.add(url, function);
+    initializer.serverHandler.router.add(url, HttpMethod.GET.name(), function);
+  }
+
+  /**
+   * Register handler for post
+   *
+   * @param url
+   * @param function
+   * @throws RouterException
+   */
+  public void post(String url, Function function) throws RouterException
+  {
+    initializer.serverHandler.router.add(url, HttpMethod.POST.name(), function);
+  }
+
+  /***
+   * Register handler for put
+   *
+   * @param url
+   * @param function
+   * @throws RouterException
+   */
+  public void put(String url, Function function) throws RouterException
+  {
+    initializer.serverHandler.router.add(url, HttpMethod.PUT.name(), function);
+  }
+
+  /***
+   * Register handler for delete
+   *
+   * @param url
+   * @param function
+   * @throws RouterException
+   */
+  public void delete(String url, Function function) throws RouterException
+  {
+    initializer.serverHandler.router.add(url, HttpMethod.DELETE.name(), function);
   }
 
   /***
@@ -71,24 +102,45 @@ public class Server
   }
 
   /***
-   * Start server on port
+   * Set port number
    *
    * @param port number (default: 8080)
    */
+  public void port(int port)
+  {
+    this.port = port;
+  }
+
+  /**
+   * Start server on specific port
+   *
+   * @param port number
+   */
   public void start(int port)
   {
-    EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-    EventLoopGroup workerGroup = new NioEventLoopGroup();
+    port(port);
+    start();
+  }
+
+  /***
+   * Start server on port
+   */
+  public void start()
+  {
+    bossGroup = new NioEventLoopGroup(1);
+    workerGroup = new NioEventLoopGroup();
     try {
-      ServerBootstrap b = new ServerBootstrap();
+      b = new ServerBootstrap();
+      b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000);
       b.group(bossGroup, workerGroup)
           .channel(NioServerSocketChannel.class)
           .childHandler(initializer);
 
-      System.out.println("Server is started: http://localhost:" + port);
+      Log.info("Server is started on http://localhost:" + port);
 
-      Channel ch = b.bind(port).sync().channel();
-      ch.closeFuture().sync();
+      serverBind = b.bind(port);
+      ch = serverBind.sync().channel();
+      channelFuture = ch.closeFuture().sync();
     }
     catch(InterruptedException e)
     {
@@ -102,5 +154,13 @@ public class Server
       workerGroup.shutdownGracefully();
       Log.info("Bye now...");
     }
+  }
+
+  public void stop()
+  {
+    Log.info("Stopping server...");
+    ch.disconnect();
+    ch.close();
+    Log.info("Server stopped...");
   }
 }

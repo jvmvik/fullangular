@@ -1,10 +1,7 @@
 package io.milkyway;
 
-import io.netty.handler.codec.http.HttpRequest;
-import io.netty.handler.codec.http.QueryStringDecoder;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -38,17 +35,17 @@ public class Router
    * @param regexurl pattern that provides concise and flexible syntax
    * @param requestHandler called when matching request found
    */
-  public void add(String regexurl, Function requestHandler) throws RouterException
+  public void add(String regexurl, String methodType, Function requestHandler) throws RouterException
   {
     // Check regular regexurl if valid
     check(regexurl);
 
     // Verify collision
-    if (collision(regexurl))
+    if (collision(regexurl, methodType))
       throw new RouterException("regexurl has already been defined : " + regexurl);
 
     // if no exception then put request handler
-    requestHandlerMap.put(regexurl, requestHandler);
+    requestHandlerMap.put(regexurl + "__" + methodType, requestHandler);
   }
 
   /**
@@ -57,9 +54,9 @@ public class Router
    * @param regexurl routing key
    * @return true when collide with an other regexurl
    */
-  public boolean collision(String regexurl)
+  public boolean collision(String regexurl, String methodType)
   {
-    return get(regexurl) != null;
+    return get(regexurl, methodType) != null;
   }
 
   /**
@@ -88,29 +85,35 @@ public class Router
    * @return requestHandler which match with url
    * @throws RouterException when no handler match
    */
-  public Result get(String url)
+  public Result get(String url, String methodType)
   {
     if (requestHandlerMap.size() == 0)
       return null;
       //throw new RouterException("No request handler defined !");
 
+    String regexurl = null;
     // Iterate over regexurl stored
-    for (String regexurl : requestHandlerMap.keySet())
+    for (String key : requestHandlerMap.keySet())
     {
-      Result result = new Result();
-      try
+      if(key.endsWith(methodType))
       {
-        result.setFunction(requestHandlerMap.get(regexurl));
-        result.setParams(parser.match(regexurl, url));
-        return result;
-      }
-      catch(RouterException ex)
-      {
-        // Skip
+        regexurl = key.substring(0, key.indexOf("__"));
+        Result result = new Result();
+        try
+        {
+          // Set parameters
+          result.setParams(parser.match(regexurl, url));
+          // Set function
+          result.setFunction(requestHandlerMap.get(key));
+          return result;
+        }
+        catch(RouterException ex)
+        {
+          // Skip
+        }
       }
     }
     return null;
-    //throw new RouterException("No request handler matched with URL : " + url);
   }
 
   class Result

@@ -1,18 +1,14 @@
 package io.milkyway;
 
+import io.milkyway.utils.MimeTypeFactory;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelProgressiveFuture;
-import io.netty.channel.ChannelProgressiveFutureListener;
 import io.netty.channel.DefaultFileRegion;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
-import io.netty.handler.stream.ChunkedFile;
 import io.netty.util.CharsetUtil;
-import io.netty.util.internal.SystemPropertyUtil;
 
 import javax.activation.MimetypesFileTypeMap;
 import java.io.*;
@@ -21,18 +17,15 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.*;
-import static io.netty.handler.codec.http.HttpHeaders.*;
-import static io.netty.handler.codec.http.HttpMethod.*;
+import static io.netty.handler.codec.http.HttpHeaders.isKeepAlive;
+import static io.netty.handler.codec.http.HttpHeaders.setContentLength;
+import static io.netty.handler.codec.http.HttpMethod.GET;
 import static io.netty.handler.codec.http.HttpResponseStatus.*;
-import static io.netty.handler.codec.http.HttpVersion.*;
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 /**
  * @author victor@milkyway.io
@@ -43,15 +36,15 @@ public class ServerStaticHandler
   public static final String HTTP_DATE_FORMAT = "EEE, dd MMM yyyy HH:mm:ss zzz";
   public static final String HTTP_DATE_GMT_TIMEZONE = "GMT";
   public static final int HTTP_CACHE_SECONDS = 60;
-
-  private final boolean useSendFile;
+  private static final String INDEX_PAGE = "index.html";
 
   private Path resource;
 
-  public ServerStaticHandler(boolean useSendFile)
+  public ServerStaticHandler()
   {
-    this.useSendFile = useSendFile;
   }
+
+  //TODO Enable cache or not if debug mode
 
   /***
    * Set static web content location
@@ -61,14 +54,14 @@ public class ServerStaticHandler
   {
     resource = Paths.get(path);
 
-    if(Files.isDirectory(resource))
-      Log.error("Resource: " + path + " do not exist.");
+    if(!Files.isDirectory(resource))
+      Log.error("Resource: " + resource.toAbsolutePath() + " does not exist !");
 
-    Log.info("Set resource to: " + resource);
+    Log.info("Set resource to: " + resource.toAbsolutePath());
   }
 
-  public void messageReceived(
-      ChannelHandlerContext ctx, HttpRequest request) throws Exception
+  public void messageReceived(ChannelHandlerContext ctx, HttpRequest request)
+      throws Exception
   {
     if(!request.getDecoderResult().isSuccess())
     {
@@ -95,6 +88,7 @@ public class ServerStaticHandler
       sendError(ctx, NOT_FOUND);
       return;
     }
+
     Path file = resource.resolve(path);
     if(Files.isHidden(file) || !Files.exists(file))
     {
@@ -102,17 +96,23 @@ public class ServerStaticHandler
       return;
     }
 
+    // Show directory content
     if(Files.isDirectory(file))
     {
       if(uri.endsWith("/"))
       {
-        sendListing(ctx, file);
+        if(Files.isReadable(file.resolve(INDEX_PAGE)))
+        {
+          file = file.resolve(INDEX_PAGE);
+        }
+        else
+          sendListing(ctx, file);
       }
       else
       {
-        sendRedirect(ctx, uri + '/');
+        sendRedirect(ctx, '/' + uri + '/');
+        return;
       }
-      return;
     }
 
     if(!Files.isRegularFile(file))
@@ -162,39 +162,7 @@ public class ServerStaticHandler
     ctx.write(response);
 
     // Write the content.
-    ChannelFuture sendFileFuture;
-    if(useSendFile)
-    {
-      sendFileFuture =
-          ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
-    }
-    else
-    {
-      sendFileFuture =
-          ctx.write(new ChunkedFile(raf, 0, fileLength, 8192), ctx.newProgressivePromise());
-    }
-
-    sendFileFuture.addListener(new ChannelProgressiveFutureListener()
-    {
-      @Override
-      public void operationProgressed(ChannelProgressiveFuture future, long progress, long total)
-      {
-        if(total < 0)
-        { // total unknown
-          System.err.println("Transfer progress: " + progress);
-        }
-        else
-        {
-          System.err.println("Transfer progress: " + progress + " / " + total);
-        }
-      }
-
-      @Override
-      public void operationComplete(ChannelProgressiveFuture future) throws Exception
-      {
-        System.err.println("Transfer complete.");
-      }
-    });
+    ctx.write(new DefaultFileRegion(raf.getChannel(), 0, fileLength), ctx.newProgressivePromise());
 
     // Write the end marker
     ChannelFuture lastContentFuture = ctx.writeAndFlush(LastHttpContent.EMPTY_LAST_CONTENT);
@@ -255,8 +223,12 @@ public class ServerStaticHandler
       return null;
     }
 
+    int i;
+    if((i = uri.indexOf("?")) > -1)
+      return uri.substring(1, i);
+
     // Convert to absolute path.
-    return SystemPropertyUtil.get("user.dir") + File.separator + uri;
+    return uri.substring(1);
   }
 
   private static final Pattern ALLOWED_FILE_NAME = Pattern.compile("[A-Za-z0-9][-_A-Za-z0-9\\.]*");
@@ -286,14 +258,14 @@ public class ServerStaticHandler
       if(Files.isRegularFile(f))
       {
         String name = f.getFileName().toString();
-        if(!ALLOWED_FILE_NAME.matcher(name).matches())
-        {
+        //if(!ALLOWED_FILE_NAME.matcher(name).matches())
+        //{
           buf.append("<li><a href=\"");
           buf.append(name);
           buf.append("\">");
           buf.append(name);
           buf.append("</a></li>\r\n");
-        }
+        //}
       }
     });
 
@@ -391,7 +363,7 @@ public class ServerStaticHandler
    */
   private static void setContentTypeHeader(HttpResponse response, Path file)
   {
-    MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
+    MimetypesFileTypeMap mimeTypesMap = MimeTypeFactory.get();
     response.headers().set(CONTENT_TYPE, mimeTypesMap.getContentType(file.toFile()));
   }
 

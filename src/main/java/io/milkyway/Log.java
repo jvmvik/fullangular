@@ -34,6 +34,6 @@ public class Log
     if(msg.endsWith("/n"))
       System.out.print(s);
     else
-      System.out.println();
+      System.out.println(s);
   }
 }

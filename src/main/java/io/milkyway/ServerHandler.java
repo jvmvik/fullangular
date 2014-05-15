@@ -1,11 +1,17 @@
 package io.milkyway;
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.DecoderResult;
-import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.HttpObject;
+import io.netty.handler.codec.http.HttpRequest;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.codec.http.QueryStringDecoder;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +22,7 @@ import java.util.Map.Entry;
 public class ServerHandler extends SimpleChannelInboundHandler<Object>
 {
   Router router = new Router();
-  ServerStaticHandler serverStaticHandler = new ServerStaticHandler(false);
+  ServerStaticHandler serverStaticHandler = new ServerStaticHandler();
 
   @Override
   public void channelReadComplete(ChannelHandlerContext ctx) throws Exception
@@ -29,23 +35,31 @@ public class ServerHandler extends SimpleChannelInboundHandler<Object>
   {
     Router.Result result = null;
     String uri;
+    HttpRequest request;
     if(msg instanceof HttpRequest)
     {
-      uri = ((HttpRequest) msg).getUri();
+      request = ((HttpRequest) msg);
+      uri = request.getUri();
       if(uri.startsWith("/do/reload"))                 // Reload application backend
       {
         Log.info("Reload application backend...");
-        Backend.reload();
+        try
+        {
+          Backend.reload();
+        }
+        catch(BackendException e)
+        {
+          e.printStackTrace();
+        }
       }
-      else if((result = router.get(uri)) != null) // Execute function
+      else if((result = router.get(uri, request.getMethod().name())) != null) // Execute function
       {
         try
         {
-          //Object s = result.getFunction().apply(json.toString());
-          //ctx.writeAndFlush(Rest.ok((String) s));
           Map<String, String> map = result.getParams();
           map.putAll(toParams((HttpRequest) msg));
-          result.getFunction().apply(new Context(map, ctx, (HttpRequest) msg));
+          Context context = new Context(map, ctx, (HttpRequest) msg);
+          result.getFunction().apply(context);
         }
         catch(Exception ex)
         {

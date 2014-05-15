@@ -8,8 +8,6 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -30,7 +28,7 @@ public class RestTest
   @Test
   public void testBuild1() throws Exception
   {
-    FullHttpResponse response = Rest.build(HttpResponseStatus.OK, Rest.toMessage("great!"));
+    FullHttpResponse response = Rest.build(HttpResponseStatus.OK, Rest.toMessage("great!"), "json/application");
     assertEquals(HttpResponseStatus.OK, response.getStatus());
     assertEquals("{\"msg\":\"great!\"}", StringEncoder.decode(response.content()));
   }

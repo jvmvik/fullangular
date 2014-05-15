@@ -8,10 +8,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.stream.Stream;
 //TOOD Use import lombok.Setter;
 
 /**
@@ -24,8 +22,15 @@ public class Backend
 {
   static final String LOCATION = "src/main/resources/backend";
   static final String NASHORN = "nashorn";
+  private static final String MILKYWAY = "milkyway";
+  private static final String SERVER = "server";
   static ScriptEngine engine;
   static ScriptEngineManager manager;
+  static Backend backend;
+
+  Path frameworkPath;
+  Path applicationPath;
+
 
   static
   {
@@ -33,51 +38,88 @@ public class Backend
     engine = manager.getEngineByName(NASHORN);
   }
 
-  static Backend backend;
-
-  //@Setter
-  Path frameworkPath;
-
-  //@Setter
-  Path appPath;
-
-  //TODO reload back on demand
-  public static void reload()
+  /*
+   * Reload back on demand
+   */
+  public static void reload() throws BackendException
   {
+    Log.info("Reloading application on demand...");
     if(backend == null)
-      throw new RuntimeException("Backend is not initialed");
+      throw new RuntimeException("Backend is not initialized...");
 
-    //TODO Clear engine previous execution
+    // Attach server context
+    Server server = (Server)backend.engine.getContext().getAttribute(SERVER);
+
+    // Stop server
+    server.stop();
+
+    // Clear code previously load
     backend.clear();
+
+    Log.info("Re-starting server...");
+
+    // Load the backend again
     backend.load();
+
+    // Start the application
+    backend.bootstrap();
   }
 
-  public static void start(Path appPath, Path frameworkPath)
+  /***
+   * Start backend with applicationPath and frameworkPath
+   *
+   * @param applicationPath
+   * @param frameworkPath
+   * @return
+   */
+  public static Backend start(Path applicationPath, Path frameworkPath) throws BackendException
   {
     if(backend == null)
       backend = new Backend();
 
-    backend.setAppPath(appPath);
+    backend.setApplicationPath(applicationPath);
     backend.setFrameworkPath(frameworkPath);
     backend.load();
+    backend.bootstrap();
+    return backend;
+  }
+
+  private void bootstrap() throws BackendException
+  {
+    Object server = engine.getContext().getAttribute(SERVER);
+    if(server == null)
+      throw new BackendException("milkyway is not available in the javascript execution context.");
+    ((Server)server).start();
   }
 
   private void clear()
   {
+    Log.debug("Clear environment context...");
     engine = manager.getEngineByName(NASHORN);
   }
 
-  public void load()
+  /***
+   * Load application
+   */
+  public void load() throws BackendException
   {
     // Load framework
     load(frameworkPath);
     // Load backend script for the
-    load(appPath);
+    load(applicationPath);
   }
 
-  static void load(Path root)
+  /***
+   * Load set of javascript present in the root directory
+   *
+   * @param root
+   */
+  static void load(Path root) throws BackendException
   {
     root = root.resolve(LOCATION);
+    if(!Files.isDirectory(root))
+      throw new BackendException("Directory must be present: " + root);
+
     try
     {
       Files.list(root).filter(p -> p.getFileName().toString().endsWith(".js")).forEach(js -> {
@@ -93,9 +135,9 @@ public class Backend
         }
         catch(ScriptException e)
         {
-          System.err.println(js.getFileName() + " fail: " + e.getMessage());
+          Log.error(js.toAbsolutePath() + " fail: " + e.getMessage());
         }
-        System.out.println("Load::" + js);
+        Log.info("Load::" + js.toAbsolutePath());
       });
     }
     catch(IOException e)
@@ -104,14 +146,33 @@ public class Backend
     }
   }
 
+  /***
+   * Set the location of the framework library
+   *
+   * @param frameworkPath
+   */
   public void setFrameworkPath(Path frameworkPath)
   {
     this.frameworkPath = frameworkPath;
   }
 
-  public void setAppPath(Path appPath)
+  /***
+   * Set the location of the application
+   *
+   * @param applicationPath
+   */
+  public void setApplicationPath(Path applicationPath)
   {
-    this.appPath = appPath;
+    this.applicationPath = applicationPath;
   }
 
+  public static Path getApplicationPath()
+  {
+    return backend.applicationPath;
+  }
+
+  public static Path getFrameworkPath()
+  {
+    return backend.frameworkPath;
+  }
 }

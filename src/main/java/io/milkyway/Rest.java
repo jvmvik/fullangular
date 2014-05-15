@@ -1,11 +1,8 @@
 package io.milkyway;
 
 import com.google.gson.JsonObject;
-import io.netty.buffer.*;
-import io.netty.handler.codec.http.DefaultFullHttpResponse;
-import io.netty.handler.codec.http.FullHttpResponse;
-import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.handler.codec.http.HttpVersion;
+import io.netty.buffer.ByteBuf;
+import io.netty.handler.codec.http.*;
 
 /**
  * Create REST response easily..
@@ -61,17 +58,19 @@ public class Rest
 
   public static FullHttpResponse build(HttpResponseStatus status, JsonObject json)
   {
-    return build(status, StringEncoder.encode(json.toString()));
+    return build(status, StringEncoder.encode(json.toString()), "json/application");
   }
 
   public static FullHttpResponse build(HttpResponseStatus status, String content)
   {
-    return build(status, StringEncoder.encode(content));
+    return build(status, StringEncoder.encode(content), "text/plain");
   }
 
-  public static FullHttpResponse build(HttpResponseStatus status, ByteBuf byteBuf)
+  public static FullHttpResponse build(HttpResponseStatus status, ByteBuf byteBuf, String mimeType)
   {
-    return new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, byteBuf);
+    FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, status, byteBuf);
+    response.headers().set(HttpHeaders.Names.CONTENT_TYPE, mimeType);
+    return response;
   }
 
 
