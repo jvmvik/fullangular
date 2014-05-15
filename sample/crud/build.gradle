@@ -1,0 +1,17 @@
+
+apply plugin: 'java'
+apply plugin: 'idea'
+
+title = 'crud'
+description = 'Simple account manager with Create Read Update Delete (CRUD) operations.. '
+sourceCompatibility = 1.8
+version = 1.0
+
+repositories {
+  mavenCentral()
+}
+
+dependencies{
+  // compile 'com.google.code.gson:gson:2.2.4'
+  testCompile 'junit:junit:4.11'
+}

@@ -1,0 +1,18 @@
+dt .head
+{
+    text-align: left;
+}
+
+// Less space on the top of a header
+.page-header
+{
+    padding-bottom: 9px;
+    margin: 15px 0 15px;
+}
+
+// Blue background when a field is selected
+.active
+{
+  background-color: rgba(141,192,219,.25);
+  text-shadow: 0 1px 1px rgba(255,255,255,.75);
+}

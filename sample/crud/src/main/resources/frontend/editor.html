@@ -1,0 +1,58 @@
+<div class="col-lg-12">
+    <h1 class="page-header">Edit</h1>
+
+    <div class="row">
+        <div class="col-lg-6">
+            <form name="myForm" role="form">
+                <div class="form-group">
+                    <label>Title</label>
+                    <input class="form-control" type="text" name="name" ng-model="account.title" required>
+                </div>
+
+                <div class="form-group">
+                    <label>URL</label>
+                    <input class="form-control" type="url" name="url" ng-model="account.url" required>
+                    <!--
+                <span ng-show="myForm.url.$error.required && !myForm.title.$pristine" class="help-inline">
+                Required</span>
+                <span ng-show="myForm.url.$error.url" class="help-inline">
+                Not a URL</span>-->
+                </div>
+
+                <div class="form-group">
+                    <label for="category">Group</label>
+                    <input class="form-control" type="text" id="category" name="category" ng-model="account.category"
+                           required>
+                </div>
+
+                <div class="form-group">
+                 <label for="description">Description</label>
+                 <textarea  class="form-control"  id="description" ng-model="account.description" required="false"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="login">Login</label>
+                    <input class="form-control"  type="text" id="login" ng-model="account.login" required="true"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="pass1">Password</label>
+                    <input class="form-control" id="pass1" type="password" ng-model="account.password" required="true"/>
+                </div>
+
+                <div class="form-group">
+                    <label for="pass2">Password verify:</label>
+                    <input class="form-control" id="pass2" type="password" ng-model="passwordCheck" required="true"/>
+                </div>
+                <br>
+                <a href="#/" class="btn">Cancel</a>
+                <button ng-click="save()" ng-disabled="myForm.$invalid"
+                        class="btn btn-primary">Save
+                </button>
+                <button ng-click="remove()"
+                        ng-show="account.$remove" class="btn btn-danger">Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

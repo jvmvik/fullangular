@@ -1,27 +1,44 @@
 package io.milkyway.model;
 
-import com.sun.xml.internal.ws.developer.Serialization;
+import com.google.gson.Gson;
 
 import java.io.Serializable;
 import java.util.UUID;
 
 /**
- * Account
+ * Account domain object
  */
 public class Account implements Serializable
 {
 
   UUID uuid;
   String title;
+  String category; // Group name
   String login;
   String password;
   String url;
   String description;
 
+  public Account()
+  {
+  }
+
   public Account(String title)
   {
     this.title = title;
     this.uuid = UUID.randomUUID();
+  }
+
+  /*
+   * Convert a
+   */
+  public Account make(Gson gson, String json)
+  {
+    Account account = gson.fromJson(json, Account.class);
+    if(account.uuid != null)
+      account.uuid = UUID.randomUUID();
+    return account;
+    //TODO Add some validation...
   }
 
   public UUID getUuid()
@@ -82,5 +99,15 @@ public class Account implements Serializable
   public void setDescription(String description)
   {
     this.description = description;
+  }
+
+  public String getCategory()
+  {
+    return category;
+  }
+
+  public void setCategory(String category)
+  {
+    this.category = category;
   }
 }

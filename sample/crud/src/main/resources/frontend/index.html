@@ -1,14 +1,102 @@
-<!doctype html>
-<html ng-app="project">
+<!DOCTYPE html>
+<html>
 <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.4/angular.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.4/angular-resource.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.3.0-beta.4/angular-route.min.js"></script>
-    <script src="app.js"></script>
-</head>
-<body>
-<h2>JavaScript Projects</h2>
 
-<div ng-view></div>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <title>IPC/0.1</title>
+
+    <!-- Core CSS - Include with every page -->
+    <link href="css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="font-awesome/css/font-awesome.css" rel="stylesheet"/>
+
+    <!-- Page-Level Plugin CSS - Blank -->
+
+    <!-- SB Admin CSS -->
+    <link href="css/sb-admin.css" rel="stylesheet"/>
+
+    <!-- Custom -->
+    <link href="css/custom.css" rel="stylesheet"/>
+    <script src="js/browser_compatibility.js"></script>
+
+</head>
+
+<body ng-app="application">
+
+<div id="wrapper" ng-controller="ApplicationController">
+
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation" style="margin-bottom: 0">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/"><i class="fa fa-code-fork"></i> Account Manager</a>
+        </div>
+        <!-- /.navbar-header -->
+
+       <ul class="nav navbar-nav navbar-top-links navbar-left">
+          <li class="active"><a href="/">Home</a></li>
+       </ul>
+
+        <ul class="nav navbar-top-links navbar-right">
+
+            <!-- Tasks running -->
+            <li>
+                <a title="Reload application." class="btn btn-default" ng-click="reload()">
+                    Reload
+                </a>
+            </li>
+
+
+        </ul>
+        <!-- /.navbar-top-links -->
+
+        <!-- Left side
+        <div class="navbar-default navbar-static-side" role="navigation">
+            <div class="sidebar-collapse">
+                <ul class="nav" id="side-menu">
+                    <li>
+                        <a href="/"><i class="fa fa-dashboard fa-fw"></i> Home</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        -->
+    </nav>
+
+    <!-- Active display -->
+    <div id="page-wrapper">
+        <div class="row">
+            <div ng-view=""></div>
+        </div>
+    </div>
+    <!-- / -->
+
+</div>
+<!-- /#wrapper -->
+
+<!-- Core Scripts - Include with every page -->
+<script src="js/jquery-1.10.2.js"></script>
+<script src="js/bootstrap.min.js"></script>
+
+<!-- AngularJS -->
+<script src="js/angular.min.js"></script>
+<!-- <script src="js/angular-loader.min.js"></script> -->
+<script src="js/angular-route.min.js"></script>
+<script src="js/angular-resource.min.js"></script>
+
+<!-- Milkyway front end -->
+<script src="app/milkyway.js"></script>
+
+<!-- Application specific -->
+<script src="app/services.js"></script>
+<script src="app/controllers.js"></script>
+<script src="app/app.js"></script>
+
 </body>
+
 </html>
